@@ -65,3 +65,48 @@ exports.create = async (req, res) => {
     return res.status(500).json({ message: `erro ao cadrastrar o usuário${err}` });
   }
 };
+
+/** método responsável por atualizar um usuário */
+exports.update = async (req, res) => {
+  /** recuperar os dados do usuário */
+  const { id } = req.params;
+  const { name, age, ocupation } = req.body;
+
+  const newUser = {
+    name, age, ocupation,
+  };
+
+  try {
+    const updatedUser = await User.updateOne({ _id: id }, newUser);
+
+    /** verificar se não houver atualização */
+    if (updatedUser.matchedCount === 0) {
+      return res.status(422).json({ message: 'Usuário não encontrado!' });
+    }
+
+    return res.status(200).json(newUser);
+  } catch (err) {
+    return res.status(500).json({ mensage: 'Erro ao atualizar os dados.' });
+  }
+};
+
+/** método responsável por deletar um usuário */
+exports.delete = async (req, res) => {
+  /** recuperar os dados do usuário */
+  const { id } = req.params;
+
+  const user = await User.findOne({ _id: id });
+
+  /** verificar se o usuário existe */
+  if (!user) {
+    return res.status(422).json({ message: 'Usuário não encontrado!' });
+  }
+
+  try {
+    await User.deleteOne({ _id: id });
+
+    return res.status(200).json({ mensage: 'Usuário removido com sucesso!' });
+  } catch (err) {
+    return res.status(500).json({ mensage: 'Erro ao deletar os dados.' });
+  }
+};
