@@ -4,8 +4,34 @@
 const User = require('../models/User');
 
 /** método responsável por listar todos os usuários */
-exports.index = (req, res) => {
-  res.json({ message: 'Hello World! vinda do controler' });
+exports.index = async (req, res) => {
+  try {
+    const users = await User.find();
+
+    return res.status(200).json(users);
+  } catch (err) {
+    return res.status(500).json({ message: `Erro ao receber os dados ${err}` });
+  }
+};
+
+/** método responsável por listar um usuário */
+exports.show = async (req, res) => {
+  /** extrair o id da requisição = req.parms.id */
+  const { id } = req.params;
+
+  /** encontrar o usuário pelo id */
+  try {
+    const user = await User.findOne({ _id: id });
+
+    /** verificar se o usuário existe */
+    if (!user) {
+      return res.status(422).json({ message: 'Usuário não encontrado!' });
+    }
+
+    return res.status(200).json(user);
+  } catch (err) {
+    return res.status(500).json({ message: `erro ao tentar exibir os dados ${err}` });
+  }
 };
 
 /** método responsável por cadastrar um usuário */
