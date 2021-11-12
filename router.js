@@ -5,7 +5,7 @@ const express = require('express');
 const route = express.Router();
 
 /** importar os controllers */
-const UserController = require('./controllers/UserController');
+const UserController = require('./src/controllers/UserController');
 
 /** rotas usuários */
 route.get('/user', UserController.index);
