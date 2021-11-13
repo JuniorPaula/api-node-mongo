@@ -1,4 +1,6 @@
 /** expotar as funções do userController */
+const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 /** importar o model de usuario */
 const User = require('../models/User');
@@ -21,7 +23,7 @@ exports.show = async (req, res) => {
 
   /** encontrar o usuário pelo id */
   try {
-    const user = await User.findOne({ _id: id });
+    const user = await User.findById(id, '-password');
 
     /** verificar se o usuário existe */
     if (!user) {
@@ -37,24 +39,41 @@ exports.show = async (req, res) => {
 /** método responsável por cadastrar um usuário */
 exports.create = async (req, res) => {
   /** recuperar os dados do body */
-  const { name, age, ocupation } = req.body;
+  const {
+    name, email, password, confirmPassword,
+  } = req.body;
 
   /** validar os dados */
   if (!name) {
     return res.status(422).json({ message: 'Nome é obrigatório!' });
   }
-  if (!age) {
-    return res.status(422).json({ message: 'Idade é obrigatório!' });
+  if (!validator.isEmail(email)) {
+    return res.status(422).json({ message: 'Email inválido!' });
   }
-  if (!ocupation) {
-    return res.status(422).json({ message: 'Profissão é obrigatório!' });
+  if (password.length < 3 || password.length > 50) {
+    return res.status(422).json({ message: 'Senha precisa ter acima de 3 caracteres!' });
   }
+
+  if (password !== confirmPassword) {
+    return res.status(422).json({ message: 'Senha precisam ser iguais!' });
+  }
+
+  /** check if user exist */
+  const userExist = await User.findOne({ email });
+
+  if (userExist) {
+    return res.status(422).json({ message: 'Email já cadastrado!' });
+  }
+
+  /** create password hash */
+  const salt = await bcrypt.genSalt(12);
+  const hashPassword = await bcrypt.hash(password, salt);
 
   /** criar um objeto com os dados do body */
   const user = {
     name,
-    age,
-    ocupation,
+    email,
+    password: hashPassword,
   };
 
   /** criar os dados no banco */
@@ -62,7 +81,8 @@ exports.create = async (req, res) => {
     await User.create(user);
     return res.status(201).json({ message: 'Usuário criado com succeso!' });
   } catch (err) {
-    return res.status(500).json({ message: `erro ao cadrastrar o usuário${err}` });
+    console.log(err);
+    return res.status(500).json({ message: 'erro ao cadrastrar o usuário.' });
   }
 };
 
